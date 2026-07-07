@@ -16,9 +16,12 @@ Add more wallpapers by adding more keys — no script changes needed.
 ## Setup
 
 ```bash
-sudo apt install jq   # if not already installed
-ln -sf "$(pwd)/wallpaper.sh" ~/.local/bin/wallpaper
+git clone https://github.com/cjpsms/wallpaper.git
+cd wallpaper
+./install.sh
 ```
+
+`install.sh` installs `jq` if missing and symlinks `wallpaper.sh` to `~/.local/bin/wallpaper`.
 
 ## Usage
 
