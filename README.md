@@ -2,7 +2,7 @@
 
 Terminal command to switch the GNOME desktop background: `wallpaper <key>`.
 
-Keys are defined in `config.json` as a flat map of `key -> image path`:
+Keys are defined in `config.json` (gitignored — it's personal, not shipped) as a flat map of `key -> image path`. See `config.example.json` for the format:
 
 ```json
 {
@@ -21,7 +21,7 @@ cd wallpaper
 ./install.sh
 ```
 
-`install.sh` installs `jq` if missing and symlinks `wallpaper.sh` to `~/.local/bin/wallpaper`.
+`install.sh` installs `jq` if missing, creates `config.json` from `config.example.json` if you don't already have one, and symlinks `wallpaper.sh` to `~/.local/bin/wallpaper`.
 
 ## Usage
 
