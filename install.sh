@@ -13,8 +13,8 @@ if [ ! -f "$DIR/config.json" ]; then
 fi
 
 mkdir -p ~/.local/bin
-ln -sf "$DIR/wallpaper.sh" ~/.local/bin/wallpaper
-echo "Installed: wallpaper -> $DIR/wallpaper.sh"
+ln -sf "$DIR/wallpaper.sh" ~/.local/bin/wp
+echo "Installed: wp -> $DIR/wallpaper.sh"
 
 case ":$PATH:" in
   *:"$HOME/.local/bin":*) ;;
