@@ -23,6 +23,15 @@ if [ ! -f "$IMG" ]; then
   exit 1
 fi
 
-gsettings set org.gnome.desktop.background picture-uri "file://$IMG"
-gsettings set org.gnome.desktop.background picture-uri-dark "file://$IMG"
+if command -v gsettings >/dev/null 2>&1 && pgrep -x gnome-shell >/dev/null 2>&1; then
+  gsettings set org.gnome.desktop.background picture-uri "file://$IMG"
+  gsettings set org.gnome.desktop.background picture-uri-dark "file://$IMG"
+elif command -v swaybg >/dev/null 2>&1; then
+  pkill -x swaybg 2>/dev/null
+  setsid swaybg -i "$IMG" -m fill >/dev/null 2>&1 &
+  disown
+else
+  echo "No supported backend found (need GNOME's gsettings, or swaybg for other Wayland compositors)."
+  exit 1
+fi
 echo "wp: $KEY -> $IMG"

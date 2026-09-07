@@ -2,9 +2,25 @@
 set -e
 DIR="$(cd "$(dirname "$0")" && pwd)"
 
+install_pkg() {
+  if command -v pacman >/dev/null 2>&1; then
+    sudo pacman -S --needed --noconfirm "$@"
+  elif command -v apt >/dev/null 2>&1; then
+    sudo apt install -y "$@"
+  else
+    echo "Unsupported package manager — install manually: $*"
+    exit 1
+  fi
+}
+
 if ! command -v jq >/dev/null 2>&1; then
   echo "Installing jq..."
-  sudo apt install -y jq
+  install_pkg jq
+fi
+
+if ! command -v gsettings >/dev/null 2>&1 && ! command -v swaybg >/dev/null 2>&1; then
+  echo "Installing swaybg (wallpaper backend for non-GNOME Wayland compositors, e.g. niri/sway)..."
+  install_pkg swaybg
 fi
 
 if [ ! -f "$DIR/config.json" ]; then

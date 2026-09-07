@@ -1,6 +1,6 @@
 # wallpaper
 
-Terminal command to switch the GNOME desktop background: `wp <key>`.
+Terminal command to switch the desktop background: `wp <key>`. Works on GNOME (via `gsettings`) and on other Wayland compositors like niri/sway (via `swaybg`), auto-detected at run time.
 
 Keys are defined in `config.json` (gitignored — it's personal, not shipped) as a flat map of `key -> image path`. See `config.example.json` for the format:
 
@@ -21,7 +21,7 @@ cd wallpaper
 ./install.sh
 ```
 
-`install.sh` installs `jq` if missing, creates `config.json` from `config.example.json` if you don't already have one, and symlinks `wallpaper.sh` to `~/.local/bin/wp`.
+`install.sh` installs `jq` if missing (and `swaybg` too, if you're not on GNOME) via `pacman` or `apt` — whichever is present — creates `config.json` from `config.example.json` if you don't already have one, and symlinks `wallpaper.sh` to `~/.local/bin/wp`.
 
 ## Usage
 
@@ -30,4 +30,4 @@ wp p1     # sets background to config.json's "p1" path
 wp        # lists available keys
 ```
 
-Sets both `picture-uri` and `picture-uri-dark` via `gsettings`, so it applies in both GNOME light and dark mode.
+On GNOME, sets both `picture-uri` and `picture-uri-dark` via `gsettings`, so it applies in both light and dark mode. On niri/sway/other wlroots compositors, it restarts `swaybg` with the new image (mode `fill`).
