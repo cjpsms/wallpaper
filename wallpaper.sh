@@ -1,19 +1,71 @@
 #!/bin/bash
-# wp <key> — set desktop background from config.json { "key": "/path/to/image" }
+# wp <key>              — set desktop background from config.json { "key": "/path/to/image" }
+# wp -f <filename|path> — set it directly: a bare filename is looked up in config.json's "dir",
+#                         a path (contains "/" or starts with ~) is used as-is
 DIR="$(dirname "$(readlink -f "$0")")"
 CONFIG="$DIR/config.json"
-KEY="$1"
 
+list_keys() {
+  jq -r 'to_entries | map(select(.key != "dir")) | map(.key) | join(", ")' "$CONFIG"
+}
+
+set_wallpaper() {
+  local IMG="$1"
+  if command -v gsettings >/dev/null 2>&1 && pgrep -x gnome-shell >/dev/null 2>&1; then
+    gsettings set org.gnome.desktop.background picture-uri "file://$IMG"
+    gsettings set org.gnome.desktop.background picture-uri-dark "file://$IMG"
+  elif command -v swaybg >/dev/null 2>&1; then
+    pkill -x swaybg 2>/dev/null
+    setsid swaybg -i "$IMG" -m fill >/dev/null 2>&1 &
+    disown
+  else
+    echo "No supported backend found (need GNOME's gsettings, or swaybg for other Wayland compositors)."
+    exit 1
+  fi
+}
+
+if [ "$1" = "-f" ] || [ "$1" = "--file" ]; then
+  NAME="$2"
+  if [ -z "$NAME" ]; then
+    echo "Usage: wp -f <filename>"
+    exit 1
+  fi
+
+  if [[ "$NAME" == /* || "$NAME" == */* || "$NAME" == ~* ]]; then
+    IMG="$NAME"
+  else
+    WPDIR=$(jq -r '.dir // empty' "$CONFIG")
+    if [ -z "$WPDIR" ]; then
+      echo 'No default folder set — add "dir": "/path/to/folder" to config.json, or pass a full path.'
+      exit 1
+    fi
+    WPDIR="${WPDIR/#\~/$HOME}"
+    IMG="$WPDIR/$NAME"
+  fi
+
+  IMG="${IMG/#\~/$HOME}"
+  if [ ! -f "$IMG" ]; then
+    echo "File not found: $IMG"
+    exit 1
+  fi
+
+  set_wallpaper "$IMG"
+  echo "wp -f: $IMG"
+  exit 0
+fi
+
+KEY="$1"
 if [ -z "$KEY" ]; then
   echo "Usage: wp <key>"
-  echo "Available: $(jq -r 'keys | join(", ")' "$CONFIG")"
+  echo "       wp -f <filename>   (grab a file directly from config.json's \"dir\")"
+  echo "Available: $(list_keys)"
   exit 1
 fi
 
 IMG=$(jq -r --arg k "$KEY" '.[$k] // empty' "$CONFIG")
 if [ -z "$IMG" ]; then
   echo "Unknown key: $KEY"
-  echo "Available: $(jq -r 'keys | join(", ")' "$CONFIG")"
+  echo "Available: $(list_keys)"
   exit 1
 fi
 
@@ -23,15 +75,5 @@ if [ ! -f "$IMG" ]; then
   exit 1
 fi
 
-if command -v gsettings >/dev/null 2>&1 && pgrep -x gnome-shell >/dev/null 2>&1; then
-  gsettings set org.gnome.desktop.background picture-uri "file://$IMG"
-  gsettings set org.gnome.desktop.background picture-uri-dark "file://$IMG"
-elif command -v swaybg >/dev/null 2>&1; then
-  pkill -x swaybg 2>/dev/null
-  setsid swaybg -i "$IMG" -m fill >/dev/null 2>&1 &
-  disown
-else
-  echo "No supported backend found (need GNOME's gsettings, or swaybg for other Wayland compositors)."
-  exit 1
-fi
+set_wallpaper "$IMG"
 echo "wp: $KEY -> $IMG"
