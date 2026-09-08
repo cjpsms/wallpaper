@@ -12,7 +12,7 @@ Keys are defined in `config.json` (gitignored — it's personal, not shipped) as
 }
 ```
 
-Add more wallpapers by adding more keys — no script changes needed. The optional `dir` key is not a wallpaper — it's the default folder used by file mode (see below).
+Add more wallpapers by adding more keys — no script changes needed. The optional `dir` key is not a wallpaper — it's the default folder used by the filename fallback (see below).
 
 ## Setup
 
@@ -29,12 +29,12 @@ cd wallpaper
 ```bash
 wp p1                    # sets background to config.json's "p1" path
 wp                        # lists available keys
-wp -f sunset.jpg          # sets background to <config.json's "dir">/sunset.jpg — no key needed
-wp -f /any/full/path.jpg  # or pass a full/relative path directly
+wp sunset.jpg             # not a key -> sets background to <config.json's "dir">/sunset.jpg
+wp /any/full/path.jpg     # not a key -> used as the path directly
 ```
 
 On GNOME, sets both `picture-uri` and `picture-uri-dark` via `gsettings`, so it applies in both light and dark mode. On niri/sway/other wlroots compositors, it restarts `swaybg` with the new image (mode `fill`).
 
-### File mode (`-f`)
+### Filename fallback
 
-Use `wp -f <filename>` to set a wallpaper straight from a folder without adding it to `config.json` first — handy for one-offs or a folder you drop new images into. A bare filename (no `/`) is resolved against `config.json`'s `dir`; anything containing a `/` (or starting with `~`) is used as the path as-is.
+If `wp <arg>` isn't a known key, it's treated as a file instead — handy for one-offs or a folder you drop new images into without adding them to `config.json`. A bare filename (no `/`) is resolved against `config.json`'s `dir`; anything containing a `/` (or starting with `~`) is used as the path as-is.

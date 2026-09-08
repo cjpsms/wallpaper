@@ -1,7 +1,7 @@
 #!/bin/bash
-# wp <key>              — set desktop background from config.json { "key": "/path/to/image" }
-# wp -f <filename|path> — set it directly: a bare filename is looked up in config.json's "dir",
-#                         a path (contains "/" or starts with ~) is used as-is
+# wp <key>      — set desktop background from config.json { "key": "/path/to/image" }
+# wp <filename> — if not a known key: a bare filename is looked up in config.json's "dir",
+#                 a path (contains "/" or starts with ~) is used as-is
 DIR="$(dirname "$(readlink -f "$0")")"
 CONFIG="$DIR/config.json"
 
@@ -24,56 +24,46 @@ set_wallpaper() {
   fi
 }
 
-if [ "$1" = "-f" ] || [ "$1" = "--file" ]; then
-  NAME="$2"
-  if [ -z "$NAME" ]; then
-    echo "Usage: wp -f <filename>"
-    exit 1
-  fi
+NAME="$1"
+if [ -z "$NAME" ]; then
+  echo "Usage: wp <key>"
+  echo "       wp <filename>   (grab a file directly from config.json's \"dir\")"
+  echo "Available: $(list_keys)"
+  exit 1
+fi
 
-  if [[ "$NAME" == /* || "$NAME" == */* || "$NAME" == ~* ]]; then
-    IMG="$NAME"
-  else
-    WPDIR=$(jq -r '.dir // empty' "$CONFIG")
-    if [ -z "$WPDIR" ]; then
-      echo 'No default folder set — add "dir": "/path/to/folder" to config.json, or pass a full path.'
-      exit 1
-    fi
-    WPDIR="${WPDIR/#\~/$HOME}"
-    IMG="$WPDIR/$NAME"
-  fi
+IMG=$(jq -r --arg k "$NAME" '.[$k] // empty' "$CONFIG")
 
+if [ -n "$IMG" ]; then
   IMG="${IMG/#\~/$HOME}"
   if [ ! -f "$IMG" ]; then
     echo "File not found: $IMG"
     exit 1
   fi
-
   set_wallpaper "$IMG"
-  echo "wp -f: $IMG"
+  echo "wp: $NAME -> $IMG"
   exit 0
 fi
 
-KEY="$1"
-if [ -z "$KEY" ]; then
-  echo "Usage: wp <key>"
-  echo "       wp -f <filename>   (grab a file directly from config.json's \"dir\")"
-  echo "Available: $(list_keys)"
-  exit 1
-fi
-
-IMG=$(jq -r --arg k "$KEY" '.[$k] // empty' "$CONFIG")
-if [ -z "$IMG" ]; then
-  echo "Unknown key: $KEY"
-  echo "Available: $(list_keys)"
-  exit 1
+if [[ "$NAME" == /* || "$NAME" == */* || "$NAME" == ~* ]]; then
+  IMG="$NAME"
+else
+  WPDIR=$(jq -r '.dir // empty' "$CONFIG")
+  if [ -z "$WPDIR" ]; then
+    echo "Unknown key: $NAME"
+    echo "Available: $(list_keys)"
+    exit 1
+  fi
+  WPDIR="${WPDIR/#\~/$HOME}"
+  IMG="$WPDIR/$NAME"
 fi
 
 IMG="${IMG/#\~/$HOME}"
 if [ ! -f "$IMG" ]; then
-  echo "File not found: $IMG"
+  echo "Unknown key or file not found: $NAME"
+  echo "Available: $(list_keys)"
   exit 1
 fi
 
 set_wallpaper "$IMG"
-echo "wp: $KEY -> $IMG"
+echo "wp: $IMG"
