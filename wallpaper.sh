@@ -32,17 +32,15 @@ if [ -z "$NAME" ]; then
   exit 1
 fi
 
-IMG=$(jq -r --arg k "$NAME" '.[$k] // empty' "$CONFIG")
+KEYIMG=$(jq -r --arg k "$NAME" '.[$k] // empty' "$CONFIG")
 
-if [ -n "$IMG" ]; then
-  IMG="${IMG/#\~/$HOME}"
-  if [ ! -f "$IMG" ]; then
-    echo "File not found: $IMG"
-    exit 1
+if [ -n "$KEYIMG" ]; then
+  KEYIMG="${KEYIMG/#\~/$HOME}"
+  if [ -f "$KEYIMG" ]; then
+    set_wallpaper "$KEYIMG"
+    echo "wp: $NAME -> $KEYIMG"
+    exit 0
   fi
-  set_wallpaper "$IMG"
-  echo "wp: $NAME -> $IMG"
-  exit 0
 fi
 
 if [[ "$NAME" == /* || "$NAME" == */* || "$NAME" == ~* ]]; then
